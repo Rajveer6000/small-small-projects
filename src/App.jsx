@@ -175,12 +175,10 @@ const App = () => {
     <div className="min-h-screen w-full bg-gradient-to-br from-slate-50 to-slate-100">
       <AppHeader onAdd={openCreateModal} onHelp={() => setShowIntro(true)} />
 
-      {/* Workspace */}
       <div
         ref={containerRef}
         className="relative mx-auto max-w-[1600px] h-[calc(100vh-64px)] w-full overflow-hidden"
       >
-        {/* Notes Layer */}
         <div className="absolute inset-0 touch-none">
           {notes.map((note) => (
             <NoteCard
