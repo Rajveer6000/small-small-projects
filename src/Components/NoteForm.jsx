@@ -23,7 +23,7 @@ export default function NoteForm({ mode, initial, onCancel, onSubmit }) {
         setTitle("");
         setContent("");
       }}
-      className="w-full max-w-xl rounded-2xl bg-white shadow p-4 space-y-3"
+      className="w-full max-w-xl space-y-3"
     >
       <h2 className="text-lg font-semibold">
         {mode === "edit" ? "Edit Note" : "Write a Note"}

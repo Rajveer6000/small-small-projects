@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocalStorage } from "./hook/useLocalStorage";
 import NoteForm from "./Components/NoteForm";
-import NoteCard from "./Components/NoteCard";
+import NoteCard from "./components/NoteCard";
+import { WelcomeModal } from "./Components/WelcomeModal";
+import { Modal } from "./Components/Modal";
+import { AppHeader } from "./Components/AppHeader";
 
 const PALETTE = [
   "#06b6d4", // cyan-500
@@ -12,12 +15,10 @@ const PALETTE = [
   "#eab308", // yellow-500
 ];
 
-// Fallback size used when NoteCard doesn't report its width/height
 const FALLBACK_NOTE_SIZE = { width: 280, height: 200 };
-// Margin to keep notes away from absolute edges on tiny screens
 const EDGE_PADDING = 8;
 
-export default function App() {
+const App = () => {
   const [notes, setNotes] = useLocalStorage("notes.v1", [
     {
       id: 1,
@@ -27,23 +28,28 @@ export default function App() {
       timestamp: Date.now(),
       position: { x: 24, y: 24 },
       color: PALETTE[0],
-      // Optional: if your NoteCard can measure itself and report size,
-      // we'll keep it here to clamp precisely
       size: FALLBACK_NOTE_SIZE,
     },
   ]);
 
   const [modalOpen, setModalOpen] = useState(false);
-  const [editing, setEditing] = useState(null); // when set -> modal is edit mode
+  const [editing, setEditing] = useState(null);
 
   const perms = { canCreate: true, canEdit: true, canDelete: true };
 
+  // First-run onboarding
+  const [firstRunSeen, setFirstRunSeen] = useLocalStorage(
+    "notes.firstRunSeen",
+    false
+  );
+  const [showIntro, setShowIntro] = useState(false);
+  useEffect(() => {
+    if (!firstRunSeen) setShowIntro(true);
+  }, [firstRunSeen]);
+
   // Container ref to compute safe drag bounds
   const containerRef = useRef(null);
-  const [containerBox, setContainerBox] = useState({
-    width: 0,
-    height: 0,
-  });
+  const [containerBox, setContainerBox] = useState({ width: 0, height: 0 });
 
   // Track container size responsively
   useEffect(() => {
@@ -89,6 +95,22 @@ export default function App() {
     };
   };
 
+  const createDemoNote = () => {
+    const id = Date.now();
+    const color = PALETTE[(notes.length + 1) % PALETTE.length];
+    const pos = clampPosition({ x: 48, y: 96 }, FALLBACK_NOTE_SIZE);
+    upsertNote({
+      id,
+      title: "Welcome 👋",
+      content:
+        "Drag me around. Tap the pencil to edit. Press + to add more notes.\nAll notes are saved in your browser.",
+      timestamp: Date.now(),
+      position: pos,
+      color,
+      size: FALLBACK_NOTE_SIZE,
+    });
+  };
+
   const openCreateModal = () => {
     if (!perms.canCreate) return;
     setEditing(null);
@@ -111,7 +133,6 @@ export default function App() {
     const id = Date.now();
     const color = PALETTE[(notes.length + 1) % PALETTE.length];
 
-    // Start near top-left, but stagger slightly; clamp to viewport
     const desiredPos = payload.position || {
       x: 24 + notes.length * 16,
       y: 24 + notes.length * 16,
@@ -131,9 +152,7 @@ export default function App() {
 
   const handleEditSave = (payload) => {
     if (!perms.canEdit) return;
-    // If user changed position or content; re-clamp if position present
-    const size =
-      editing?.size || payload.size || FALLBACK_NOTE_SIZE;
+    const size = editing?.size || payload.size || FALLBACK_NOTE_SIZE;
     const position = payload.position
       ? clampPosition(payload.position, size)
       : undefined;
@@ -153,25 +172,16 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-gray-100">
-      {/* App Bar */}
-      <div className="sticky top-0 z-20 w-full bg-white border-b border-gray-200">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
-          <h1 className="text-lg sm:text-xl font-semibold text-gray-800">
-            Sticky Notes
-          </h1>
-
-          {/* (Optional) future filters/actions go here */}
-        </div>
-      </div>
+    <div className="min-h-screen w-full bg-gradient-to-br from-slate-50 to-slate-100">
+      <AppHeader onAdd={openCreateModal} onHelp={() => setShowIntro(true)} />
 
       {/* Workspace */}
       <div
         ref={containerRef}
-        className="relative mx-auto max-w-[1600px] h-[calc(100vh-56px)] w-full overflow-hidden"
+        className="relative mx-auto max-w-[1600px] h-[calc(100vh-64px)] w-full overflow-hidden"
       >
         {/* Notes Layer */}
-        <div className="absolute inset-0">
+        <div className="absolute inset-0 touch-none">
           {notes.map((note) => (
             <NoteCard
               key={note.id}
@@ -183,35 +193,11 @@ export default function App() {
             />
           ))}
         </div>
-
-        {/* Floating Add Button */}
-        {perms.canCreate && (
-          <button
-            onClick={openCreateModal}
-            className="fixed sm:absolute right-4 bottom-4 sm:right-6 sm:bottom-6 z-30 inline-flex items-center justify-center rounded-full shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500 h-14 w-14 bg-cyan-600 hover:bg-cyan-700 text-white"
-            aria-label="Add note"
-            title="Add note"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="26"
-              height="26"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.4"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M12 5v14M5 12h14" />
-            </svg>
-          </button>
-        )}
       </div>
 
       {/* Modal (Create/Edit) */}
       {modalOpen && (
-        <Modal onClose={closeModal}>
+        <Modal title={editing ? "Edit note" : "New note"} onClose={closeModal}>
           {!editing ? (
             <NoteForm
               mode="create"
@@ -228,70 +214,23 @@ export default function App() {
           )}
         </Modal>
       )}
+
+      {showIntro && (
+        <WelcomeModal
+          onClose={() => {
+            setShowIntro(false);
+          }}
+          onDontShowAgain={(checked) => {
+            if (checked) setFirstRunSeen(true);
+            else setFirstRunSeen(false);
+          }}
+          onCreateDemo={() => {
+            createDemoNote();
+          }}
+        />
+      )}
     </div>
   );
-}
+};
 
-/**
- * Minimal accessible modal that centers content and locks background scroll.
- * Tailwind-only, no external deps.
- */
-function Modal({ children, onClose }) {
-  useEffect(() => {
-    const original = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    const onKey = (e) => e.key === "Escape" && onClose?.();
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.body.style.overflow = original;
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [onClose]);
-
-  return (
-    <div
-      className="fixed inset-0 z-40 flex items-center justify-center p-4 sm:p-6"
-      role="dialog"
-      aria-modal="true"
-      onMouseDown={(e) => {
-        // close when clicking the dimmed backdrop
-        if (e.target === e.currentTarget) onClose?.();
-      }}
-    >
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-[1px]" />
-      <div className="relative z-10 w-full max-w-lg">
-        <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
-          <div className="flex items-center justify-between px-4 sm:px-5 py-3 border-b border-gray-100">
-            <h2 className="text-base sm:text-lg font-semibold text-gray-800">
-              {/** Title handled by NoteForm; keep this minimal or slot a prop */}
-              Note
-            </h2>
-            <button
-              onClick={onClose}
-              className="h-9 w-9 inline-flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500"
-              aria-label="Close"
-              title="Close"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="22"
-                height="22"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M18 6 6 18" />
-                <path d="m6 6 12 12" />
-              </svg>
-            </button>
-          </div>
-
-          <div className="px-4 sm:px-5 py-4">{children}</div>
-        </div>
-      </div>
-    </div>
-  );
-}
+export default App;
