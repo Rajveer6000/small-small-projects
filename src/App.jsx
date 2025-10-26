@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocalStorage } from "./hook/useLocalStorage";
 import NoteForm from "./Components/NoteForm";
-import NoteCard from "./components/NoteCard";
 import { WelcomeModal } from "./Components/WelcomeModal";
 import { Modal } from "./Components/Modal";
 import { AppHeader } from "./Components/AppHeader";
+import NoteCard from "./Components/NoteCard";
 
 const PALETTE = [
   "#06b6d4", // cyan-500
