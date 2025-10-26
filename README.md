@@ -1,88 +1,49 @@
-# react-vite-tailwind-starter
+# RS Notes
 
-Minimal starter for React + Vite + Tailwind CSS.
+[![Vercel Deploy](https://img.shields.io/badge/Deployed%20on-Vercel-black)](https://rs-notes.vercel.app/)
+[![Made with React](https://img.shields.io/badge/Made%20with-React-61DAFB)](#-tech-stack)
 
-## Features
-- React 18 + Vite
-- Tailwind CSS with PostCSS
-- Fast dev server and HMR
-- Production build ready
+**Live App:** https://rs-notes.vercel.app/
 
-## Prerequisites
-- Node.js 16+
-- npm / yarn / pnpm
+RS Notes is a fast, minimalist, and responsive note-taking web app. It focuses on quick capture, distraction-free editing, and instant retrieval—perfect for personal notes, tasks, and lightweight knowledge bases.
 
-## Quick start
-1. Clone or create project:
-    - git clone ... or create with `npm create vite@latest my-app -- --template react`
-2. Install dependencies:
-    - npm: `npm install`
-    - pnpm: `pnpm install`
-    - yarn: `yarn`
-3. Run dev server:
-    - npm: `npm run dev`
-4. Build for production:
-    - npm: `npm run build`
-5. Preview production build:
-    - npm: `npm run preview`
+---
 
-## NPM scripts
-- dev: `vite`
-- build: `vite build`
-- preview: `vite preview`
-- format: e.g. `prettier --write .` (if configured)
+## ✨ Features
 
-Example package.json scripts:
-```
-"scripts": {
-  "dev": "vite",
-  "build": "vite build",
-  "preview": "vite preview",
-  "format": "prettier --write ."
-}
-```
+- **Instant CRUD:** Create, edit, pin, and delete notes in a snap.
+- **Auto-Save:** Your changes persist automatically.
+- **Search & Filters:** Find notes by title/content; filter by pinned.
+- **Dark / Light Mode:** Remembers your preference.
+- **Responsive UI:** Works great on desktop, tablet, and mobile.
+- **Zero-Config Hosting:** Optimized for Vercel with best-practice headers.
 
-## Tailwind setup (typical)
-1. Install: `npm install -D tailwindcss postcss autoprefixer`
-2. Init: `npx tailwindcss init -p`
-3. tailwind.config.js: add content globs:
-    ```
-    module.exports = {
-      content: ['./index.html', './src/**/*.{js,jsx,ts,tsx}'],
-      theme: { extend: {} },
-      plugins: [],
-    }
-    ```
-4. In src/index.css:
-    ```
-    @tailwind base;
-    @tailwind components;
-    @tailwind utilities;
-    ```
+> Optional (if you wire a backend): user auth, cloud sync, and shareable links.
 
-## Project structure (suggested)
-- src/
-  - main.jsx
-  - App.jsx
-  - index.css
-  - components/
-- public/
-- vite.config.js
-- tailwind.config.js
-- package.json
-- README.md
+---
 
-## Environment
-- Use `.env` or `.env.local` for runtime variables.
-- Prefix client variables with VITE_ for Vite to expose them.
+## 🧰 Tech Stack
 
-## Deployment
-- Works with Vercel, Netlify, Surge, GitHub Pages (use build output in `dist/`).
+- **Frontend:** React (+ Vite)
+- **Styling:** Tailwind CSS (or CSS Modules)
+- **State:** React Hooks + Context
+- **Storage:** LocalStorage (upgrade path: IndexedDB/Firebase)
+- **Deploy:** Vercel
 
-## Contributing
-- Open issues or PRs. Keep changes small and focused.
+> If your stack differs, update this section to match your repo.
 
-## License
-- Add a license (e.g., MIT) in LICENSE file.
+---
 
-Notes: adjust to your preferred package manager, linters, and CI.
+## 📦 Getting Started (Local)
+
+```bash
+# 1) Clone
+git clone https://github.com/Rajveer6000/small-small-projects.git
+cd small-small-projects
+
+# 2) Install
+npm install
+
+# 3) Run dev server
+npm run dev
+# Vite default: http://localhost:5173
