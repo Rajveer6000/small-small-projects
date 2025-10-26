@@ -1,17 +1,88 @@
-# React + Vite
+# react-vite-tailwind-starter
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Minimal starter for React + Vite + Tailwind CSS.
 
-Currently, two official plugins are available:
+## Features
+- React 18 + Vite
+- Tailwind CSS with PostCSS
+- Fast dev server and HMR
+- Production build ready
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Prerequisites
+- Node.js 16+
+- npm / yarn / pnpm
 
-## React Compiler
+## Quick start
+1. Clone or create project:
+    - git clone ... or create with `npm create vite@latest my-app -- --template react`
+2. Install dependencies:
+    - npm: `npm install`
+    - pnpm: `pnpm install`
+    - yarn: `yarn`
+3. Run dev server:
+    - npm: `npm run dev`
+4. Build for production:
+    - npm: `npm run build`
+5. Preview production build:
+    - npm: `npm run preview`
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## NPM scripts
+- dev: `vite`
+- build: `vite build`
+- preview: `vite preview`
+- format: e.g. `prettier --write .` (if configured)
 
-## Expanding the ESLint configuration
+Example package.json scripts:
+```
+"scripts": {
+  "dev": "vite",
+  "build": "vite build",
+  "preview": "vite preview",
+  "format": "prettier --write ."
+}
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
-# small-small-projects
+## Tailwind setup (typical)
+1. Install: `npm install -D tailwindcss postcss autoprefixer`
+2. Init: `npx tailwindcss init -p`
+3. tailwind.config.js: add content globs:
+    ```
+    module.exports = {
+      content: ['./index.html', './src/**/*.{js,jsx,ts,tsx}'],
+      theme: { extend: {} },
+      plugins: [],
+    }
+    ```
+4. In src/index.css:
+    ```
+    @tailwind base;
+    @tailwind components;
+    @tailwind utilities;
+    ```
+
+## Project structure (suggested)
+- src/
+  - main.jsx
+  - App.jsx
+  - index.css
+  - components/
+- public/
+- vite.config.js
+- tailwind.config.js
+- package.json
+- README.md
+
+## Environment
+- Use `.env` or `.env.local` for runtime variables.
+- Prefix client variables with VITE_ for Vite to expose them.
+
+## Deployment
+- Works with Vercel, Netlify, Surge, GitHub Pages (use build output in `dist/`).
+
+## Contributing
+- Open issues or PRs. Keep changes small and focused.
+
+## License
+- Add a license (e.g., MIT) in LICENSE file.
+
+Notes: adjust to your preferred package manager, linters, and CI.
