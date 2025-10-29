@@ -13,26 +13,16 @@ const NoteCard = ({ note, perms, onEdit, onDelete, onDrag }) => {
   }, [note.position]);
 
   const onPointerDown = (e) => {
-    // Only act on primary pointer (ignore additional/multi-touch)
     if (!e.isPrimary) return;
-
-    // Prevent scroll/pinch from hijacking the gesture
     e.preventDefault();
 
     dragging.current = true;
     pointerIdRef.current = e.pointerId;
     setZ((p) => p + 1);
-
-    // Record starting pointer + origin position
     drag.current = { sx: e.clientX, sy: e.clientY, ox: pos.x, oy: pos.y };
 
-    // Capture the pointer so we keep getting moves even if the finger
-    // leaves the element bounds (iOS fix)
-    try {
-      cardRef.current?.setPointerCapture?.(e.pointerId);
-    } catch {}
+    try { cardRef.current?.setPointerCapture?.(e.pointerId); } catch {}
 
-    // Add listeners on the element (not window) to avoid passive defaults
     cardRef.current?.addEventListener("pointermove", onPointerMove, { passive: false });
     cardRef.current?.addEventListener("pointerup", onPointerUp, { once: true });
     cardRef.current?.addEventListener("pointercancel", onPointerCancel, { once: true });
@@ -40,24 +30,22 @@ const NoteCard = ({ note, perms, onEdit, onDelete, onDrag }) => {
 
   const onPointerMove = (e) => {
     if (!dragging.current || e.pointerId !== pointerIdRef.current) return;
-    // Prevent scrolling while dragging
     e.preventDefault();
 
     const dx = e.clientX - drag.current.sx;
     const dy = e.clientY - drag.current.sy;
     const next = { x: drag.current.ox + dx, y: drag.current.oy + dy };
-    setPos(next);
-    onDrag?.(note.id, next);
+
+    // Ask parent to approve (clamp + overlap check). Only update if approved.
+    const approved = onDrag?.(note.id, next);
+    if (approved) setPos(approved);
   };
 
   const finish = () => {
     dragging.current = false;
+    const pid = pointerIdRef.current;
     pointerIdRef.current = null;
-    try {
-      // Release capture (best effort)
-      cardRef.current?.releasePointerCapture?.(pointerIdRef.current);
-    } catch {}
-    // Clean up listeners
+    try { cardRef.current?.releasePointerCapture?.(pid); } catch {}
     cardRef.current?.removeEventListener?.("pointermove", onPointerMove);
   };
 
@@ -71,16 +59,9 @@ const NoteCard = ({ note, perms, onEdit, onDelete, onDrag }) => {
     >
       <div
         ref={cardRef}
-        // 👇 The two big fixes for mobile:
-        // 1) touch-none => touch-action: none (stops browser pan/zoom)
-        // 2) pointer capture (above) => keeps events flowing
-        className="relative w-[260px] rounded-2xl bg-white shadow-lg p-4 cursor-grab active:cursor-grabbing touch-none"
+        className="relative w-[280px] rounded-2xl bg-white shadow-lg p-4 cursor-grab active:cursor-grabbing touch-none"
         onPointerDown={onPointerDown}
-        // Extra safety for images/long-press behaviors
-        style={{
-          WebkitUserDrag: "none",
-          userSelect: "none",
-        }}
+        style={{ WebkitUserDrag: "none", userSelect: "none" }}
       >
         <div
           className="absolute left-3 top-4 h-6 w-1.5 rounded-full"
@@ -99,10 +80,9 @@ const NoteCard = ({ note, perms, onEdit, onDelete, onDrag }) => {
             {perms?.canEdit && (
               <button
                 title="Edit"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  e.preventDefault();
-                  onEdit?.(note);
+                onClick={() => {
+                  alert("Edit clicked");
+                  onEdit(note);
                 }}
                 className="rounded-md p-1 hover:bg-gray-100"
               >
@@ -115,9 +95,7 @@ const NoteCard = ({ note, perms, onEdit, onDelete, onDrag }) => {
             {perms?.canDelete && (
               <button
                 title="Delete"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  e.preventDefault();
+                onClick={() => {
                   onDelete?.(note.id);
                 }}
                 className="rounded-md p-1 hover:bg-gray-100"
