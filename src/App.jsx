@@ -1,11 +1,8 @@
-import LeanPage from "./Components/Lean";
+import LeanPaySetup from "./Components/LeanPaySetup";
 import SetupPage from "./Components/SetupPage";
 
 const App = () => {
-  return (
-    // <LeanPage/>
-    <SetupPage />
-  );
+  return <LeanPaySetup />;
 };
 
 export default App;
