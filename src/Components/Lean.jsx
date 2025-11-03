@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 // <script src="https://cdn.leantech.me/link/loader/prod/ae/latest/lean-link-loader.min.js"></script>
 
 const APP_TOKEN = "df1c6e35-87ac-42b6-9746-d0f000ec25b5";
-const PERMISSIONS = ["identity", "accounts", "transactions", "balance"];
+const PERMISSIONS = ["identity", "accounts", "transactions", "balance", "payments"];
 const SANDBOX = true;
 const API_BASE = "http://localhost:8080";
 
@@ -286,6 +286,9 @@ const Lean = () => {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8 px-4">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
+        <pre>
+          {/* {JSON.stringify(PERMISSIONS, null, 2)} */}
+        </pre>
         <div className="text-center mb-8">
           <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-2">
             Financial Data Integration
