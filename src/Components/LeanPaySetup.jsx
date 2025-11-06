@@ -52,6 +52,15 @@ const LeanPaySetup = () => {
   const [loadingPayment, setLoadingPayment] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
 
+  // Insights APIs states
+  const [expensesStartDate, setExpensesStartDate] = useState("2025-09-20");
+  const [expensesData, setExpensesData] = useState(null);
+  const [incomeStartDate, setIncomeStartDate] = useState("2025-09-20");
+  const [incomeType, setIncomeType] = useState("ALL");
+  const [incomeData, setIncomeData] = useState(null);
+  const [fullNameToVerify, setFullNameToVerify] = useState("");
+  const [nameVerification, setNameVerification] = useState(null);
+
   const connectWithLean = async (userId) => {
     setLoading(true);
     setError("");
@@ -87,6 +96,78 @@ const LeanPaySetup = () => {
 
   const handleRegisterChange = (e) => {
     setRegisterData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  // Expenses API
+  const fetchExpenses = async () => {
+    if (!userRegistered?.id) {
+      setError("User not registered");
+      return;
+    }
+    setInfo("");
+    setError("");
+    try {
+      const url = `${API_BASE}/api/lean/expenses?userId=${encodeURIComponent(
+        userRegistered.id
+      )}&startDate=${encodeURIComponent(expensesStartDate)}`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("Expenses fetch failed");
+      const data = await res.json();
+      setExpensesData(data);
+      setInfo("Expenses insights loaded.");
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  // Income API
+  const fetchIncome = async () => {
+    if (!userRegistered?.id) {
+      setError("User not registered");
+      return;
+    }
+    setInfo("");
+    setError("");
+    try {
+      const url = `${API_BASE}/api/lean/income?userId=${encodeURIComponent(
+        userRegistered.id
+      )}&startDate=${encodeURIComponent(
+        incomeStartDate
+      )}&incomeType=${encodeURIComponent(incomeType)}`;
+      const res = await fetch(url, { method: "POST" });
+      if (!res.ok) throw new Error("Income fetch failed");
+      const data = await res.json();
+      setIncomeData(data);
+      setInfo("Income insights loaded.");
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  // Name Verification API
+  const verifyName = async () => {
+    if (!userRegistered?.id) {
+      setError("User not registered");
+      return;
+    }
+    if (!fullNameToVerify) {
+      setError("Please enter full name to verify");
+      return;
+    }
+    setInfo("");
+    setError("");
+    try {
+      const url = `${API_BASE}/api/lean/name-verification?userId=${encodeURIComponent(
+        userRegistered.id
+      )}&fullName=${encodeURIComponent(fullNameToVerify)}`;
+      const res = await fetch(url, { method: "POST" });
+      if (!res.ok) throw new Error("Name verification failed");
+      const data = await res.json();
+      setNameVerification(data);
+      setInfo("Name verification completed.");
+    } catch (err) {
+      setError(err.message);
+    }
   };
 
   const handleRegisterSubmit = async (e) => {
@@ -390,6 +471,13 @@ const LeanPaySetup = () => {
     setError("");
     setConnected(false);
     setDateRange({ fromDate: "", toDate: "" });
+    setExpensesStartDate("2025-09-20");
+    setExpensesData(null);
+    setIncomeStartDate("2025-09-20");
+    setIncomeType("ALL");
+    setIncomeData(null);
+    setFullNameToVerify("");
+    setNameVerification(null);
     setRegisterData({
       email: "",
       password: "",
@@ -675,6 +763,150 @@ const LeanPaySetup = () => {
                     </button>
                   </div>
 
+                  {/* Insights Section: Expenses, Income, Name Verification */}
+                  <div className="border border-gray-200 rounded-lg overflow-hidden">
+                    <div className="bg-gray-50 px-4 py-3 border-b">
+                      <h3 className="font-semibold text-gray-800">Insights & Verification</h3>
+                    </div>
+                    <div className="p-4 space-y-6">
+                      {/* Expenses */}
+                      <div>
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
+                          <div className="md:col-span-2">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Expenses start date</label>
+                            <input
+                              type="date"
+                              value={expensesStartDate}
+                              onChange={(e) => setExpensesStartDate(e.target.value)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                          </div>
+                          <div>
+                            <button
+                              onClick={fetchExpenses}
+                              className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 font-semibold transition-all duration-200"
+                            >
+                              Load Expenses
+                            </button>
+                          </div>
+                        </div>
+                        {expensesData?.insights?.total && (
+                          <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <div className="p-3 rounded-lg bg-blue-50 border border-blue-100">
+                              <div className="text-xs text-blue-700">Total Expenses</div>
+                              <div className="text-lg font-semibold text-blue-900">
+                                {formatCurrency(expensesData.insights.total.amount, expensesData.insights.currency || "AED")}
+                              </div>
+                            </div>
+                            <div className="p-3 rounded-lg bg-blue-50 border border-blue-100">
+                              <div className="text-xs text-blue-700">Avg Monthly</div>
+                              <div className="text-lg font-semibold text-blue-900">
+                                {formatCurrency(expensesData.insights.total.average_monthly_amount, expensesData.insights.currency || "AED")}
+                              </div>
+                            </div>
+                            <div className="p-3 rounded-lg bg-blue-50 border border-blue-100">
+                              <div className="text-xs text-blue-700">Tx Count</div>
+                              <div className="text-lg font-semibold text-blue-900">
+                                {expensesData.insights.total.count}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Income */}
+                      <div>
+                        <div className="grid grid-cols-1 md:grid-cols-5 gap-3 items-end">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Income start date</label>
+                            <input
+                              type="date"
+                              value={incomeStartDate}
+                              onChange={(e) => setIncomeStartDate(e.target.value)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Income type</label>
+                            <select
+                              value={incomeType}
+                              onChange={(e) => setIncomeType(e.target.value)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            >
+                              <option value="ALL">ALL</option>
+                              <option value="SALARY">SALARY</option>
+                              <option value="NON_SALARY">NON_SALARY</option>
+                            </select>
+                          </div>
+                          <div>
+                            <button
+                              onClick={fetchIncome}
+                              className="w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 font-semibold transition-all duration-200"
+                            >
+                              Load Income
+                            </button>
+                          </div>
+                        </div>
+                        {incomeData?.insights && (
+                          <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <div className="p-3 rounded-lg bg-purple-50 border border-purple-100">
+                              <div className="text-xs text-purple-700">Salary Total</div>
+                              <div className="text-lg font-semibold text-purple-900">
+                                {incomeData.insights.salary?.total ? formatCurrency(incomeData.insights.salary.total.amount, incomeData.insights.salary.currency || "AED") : "-"}
+                              </div>
+                            </div>
+                            <div className="p-3 rounded-lg bg-purple-50 border border-purple-100">
+                              <div className="text-xs text-purple-700">Non-salary Total</div>
+                              <div className="text-lg font-semibold text-purple-900">
+                                {incomeData.insights.non_salary?.total ? formatCurrency(incomeData.insights.non_salary.total.amount, incomeData.insights.non_salary.currency || "AED") : "-"}
+                              </div>
+                            </div>
+                            <div className="p-3 rounded-lg bg-purple-50 border border-purple-100">
+                              <div className="text-xs text-purple-700">Latest Month Salary Count</div>
+                              <div className="text-lg font-semibold text-purple-900">
+                                {incomeData.insights.salary?.monthly_totals?.[1]?.count ?? "-"}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Name Verification */}
+                      <div>
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
+                          <div className="md:col-span-2">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Full name to verify</label>
+                            <input
+                              type="text"
+                              value={fullNameToVerify}
+                              onChange={(e) => setFullNameToVerify(e.target.value)}
+                              placeholder="Enter full name"
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                          </div>
+                          <div>
+                            <button
+                              onClick={verifyName}
+                              className="w-full bg-emerald-600 text-white py-2 rounded-lg hover:bg-emerald-700 font-semibold transition-all duration-200"
+                            >
+                              Verify Name
+                            </button>
+                          </div>
+                        </div>
+                        {nameVerification?.data && (
+                          <div className="mt-3 p-3 rounded-lg bg-emerald-50 border border-emerald-100">
+                            <div className="text-sm text-emerald-900 font-medium">
+                              Match: {nameVerification.data.match_type} ({Math.round((nameVerification.data.confidence || 0) * 100)}%)
+                            </div>
+                            <div className="text-xs text-emerald-800 mt-1">
+                              Provided: {nameVerification.data.full_name_provided} | Retrieved: {nameVerification.data.full_name_retrieved || "-"}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
                   {/* Payment Section */}
                   <div className="border border-gray-200 rounded-lg overflow-hidden">
                     <div className="bg-gray-50 px-4 py-3 border-b">
@@ -730,9 +962,6 @@ const LeanPaySetup = () => {
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                           >
                             <option value="AED">AED</option>
-                            <option value="USD">USD</option>
-                            <option value="EUR">EUR</option>
-                            <option value="GBP">GBP</option>
                           </select>
                         </div>
                         <div>
@@ -879,11 +1108,10 @@ const LeanPaySetup = () => {
                         {accounts.map((acc, index) => (
                           <div
                             key={acc.account_id}
-                            className={`p-4 border-b cursor-pointer transition-all duration-200 hover:bg-blue-50 ${
-                              selectedAccount?.account_id === acc.account_id
+                            className={`p-4 border-b cursor-pointer transition-all duration-200 hover:bg-blue-50 ${selectedAccount?.account_id === acc.account_id
                                 ? "bg-blue-50 border-l-4 border-l-blue-500"
                                 : ""
-                            }`}
+                              }`}
                             onClick={() => handleAccountSelect(acc)}
                           >
                             <div className="flex items-center justify-between">
@@ -1063,23 +1291,22 @@ const LeanPaySetup = () => {
                                     </span>
                                     {transaction.insights
                                       ?.category_confidence && (
-                                      <div className="text-xs text-gray-500 mt-1">
-                                        Confidence:{" "}
-                                        {Math.round(
-                                          transaction.insights
-                                            .category_confidence * 100
-                                        )}
-                                        %
-                                      </div>
-                                    )}
+                                        <div className="text-xs text-gray-500 mt-1">
+                                          Confidence:{" "}
+                                          {Math.round(
+                                            transaction.insights
+                                              .category_confidence * 100
+                                          )}
+                                          %
+                                        </div>
+                                      )}
                                   </td>
                                   <td className="px-4 py-3 whitespace-nowrap text-sm text-right">
                                     <span
-                                      className={`font-semibold ${
-                                        transaction.amount >= 0
+                                      className={`font-semibold ${transaction.amount >= 0
                                           ? "text-green-600"
                                           : "text-red-600"
-                                      }`}
+                                        }`}
                                     >
                                       {formatCurrency(
                                         transaction.amount,
@@ -1089,11 +1316,10 @@ const LeanPaySetup = () => {
                                   </td>
                                   <td className="px-4 py-3 whitespace-nowrap">
                                     <span
-                                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                        transaction.pending
+                                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${transaction.pending
                                           ? "bg-yellow-100 text-yellow-800"
                                           : "bg-green-100 text-green-800"
-                                      }`}
+                                        }`}
                                     >
                                       {transaction.pending
                                         ? "Pending"
