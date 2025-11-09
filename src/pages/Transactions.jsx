@@ -38,10 +38,11 @@ const formatAccountLabel = (account) => {
   return pieces.join(" - ");
 };
 
-const normalizeStatus = (status) =>
-  (status && typeof status === "string"
-    ? status
-    : status?.toString() || "UNKNOWN"
+const normalizeCategory = (tx) =>
+  (tx?.category ||
+    tx?.insights?.category ||
+    tx?.insights?.type ||
+    "UNCATEGORISED"
   ).toUpperCase();
 
 const Transactions = () => {
@@ -52,8 +53,8 @@ const Transactions = () => {
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
-  const [statusFilter, setStatusFilter] = useState("ALL");
-  const [statusOptions, setStatusOptions] = useState(["ALL"]);
+  const [categoryFilter, setCategoryFilter] = useState("ALL");
+  const [categoryOptions, setCategoryOptions] = useState(["ALL"]);
   const [range, setRange] = useState({
     fromDate: firstDayOfMonth(),
     toDate: today(),
@@ -118,15 +119,15 @@ const Transactions = () => {
       const data = await res.json();
       const payload = data?.payload?.transactions ?? [];
       setTransactions(payload);
-      const uniqueStatuses = Array.from(
+      const uniqueCategories = Array.from(
         new Set(
           payload
-            .map((tx) => normalizeStatus(tx.status))
-            .filter((value) => value && value !== "UNKNOWN")
+            .map((tx) => normalizeCategory(tx))
+            .filter((value) => value && value !== "UNCATEGORISED")
         )
       );
-      setStatusOptions(["ALL", ...uniqueStatuses]);
-      setStatusFilter("ALL");
+      setCategoryOptions(["ALL", ...uniqueCategories]);
+      setCategoryFilter("ALL");
       setStatus(`Showing ${payload.length} transactions`);
     } catch (err) {
       setError(err.message || "Failed to load transactions");
@@ -136,11 +137,11 @@ const Transactions = () => {
   };
 
   const filteredTransactions = useMemo(() => {
-    if (statusFilter === "ALL") return transactions;
+    if (categoryFilter === "ALL") return transactions;
     return transactions.filter(
-      (tx) => normalizeStatus(tx.status) === statusFilter
+      (tx) => normalizeCategory(tx) === categoryFilter
     );
-  }, [transactions, statusFilter]);
+  }, [transactions, categoryFilter]);
 
   const totals = useMemo(() => {
     if (!filteredTransactions.length) return null;
@@ -202,15 +203,15 @@ const Transactions = () => {
           </label>
           {transactions.length > 0 && (
             <label className="text-sm font-medium text-slate-600 flex flex-col gap-1">
-              Status
+              Category
               <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
+                value={categoryFilter}
+                onChange={(e) => setCategoryFilter(e.target.value)}
                 className="border border-slate-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500"
               >
-                {statusOptions.map((value) => (
+                {categoryOptions.map((value) => (
                   <option key={value} value={value}>
-                    {value === "ALL" ? "All statuses" : value}
+                    {value === "ALL" ? "All categories" : value}
                   </option>
                 ))}
               </select>
@@ -277,9 +278,6 @@ const Transactions = () => {
                 <th className="px-4 py-3 text-left font-semibold text-slate-600">
                   Category
                 </th>
-                <th className="px-4 py-3 text-left font-semibold text-slate-600">
-                  Status
-                </th>
                 <th className="px-4 py-3 text-right font-semibold text-slate-600">
                   Amount
                 </th>
@@ -294,21 +292,8 @@ const Transactions = () => {
                   <td className="px-4 py-3 text-slate-800 font-medium">
                     {tx.description || tx.counterparty_name}
                   </td>
-                  <td className="px-4 py-3 text-slate-500">
-                    {tx.category || tx.type}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                        normalizeStatus(tx.status) === "POSTED"
-                          ? "bg-emerald-50 text-emerald-700"
-                          : normalizeStatus(tx.status) === "PENDING"
-                          ? "bg-amber-50 text-amber-700"
-                          : "bg-slate-100 text-slate-600"
-                      }`}
-                    >
-                      {normalizeStatus(tx.status)}
-                    </span>
+                  <td className="px-4 py-3 text-slate-500 uppercase tracking-wide text-xs">
+                    {normalizeCategory(tx)}
                   </td>
                   <td
                     className={`px-4 py-3 text-right font-semibold ${
@@ -322,7 +307,7 @@ const Transactions = () => {
               {!filteredTransactions.length && (
                 <tr>
                   <td
-                    colSpan="5"
+                    colSpan="4"
                     className="px-4 py-8 text-center text-slate-500"
                   >
                     {loading

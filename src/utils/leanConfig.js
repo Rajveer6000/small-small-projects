@@ -4,7 +4,6 @@ export const PERMISSIONS = [
   "identity",
   "accounts",
   "transactions",
-  "balance",
-  "payments",
+  "balance"
 ];
 export const SANDBOX = true;

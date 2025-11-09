@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useUserContext } from "../context/UserContext";
 import { API_BASE } from "../utils/leanConfig";
 
@@ -38,6 +38,38 @@ const Profile = () => {
   const documents = profile?.documents || [];
   const addresses = profile?.addresses || [];
   const employment = profile?.employment;
+  const derived = profile
+    ? {
+        fullName: profile.full_name || profile.name || "Unknown customer",
+        dob: profile.date_of_birth || profile.birth_date,
+        nationality: profile.nationality || profile.country || "-",
+        gender: profile.gender || profile.sex || "-",
+        email: profile.email || profile.email_address || "-",
+        phone:
+          profile.phone ||
+          profile.phone_number ||
+          profile.mobile_number ||
+          "-",
+        emiratesId:
+          profile.emirates_id ||
+          profile.national_id ||
+          profile.national_identity_number ||
+          "-",
+        status: profile.status || "UNKNOWN",
+        address:
+          profile.address ||
+          profile.address_line ||
+          profile.address_line_1 ||
+          "",
+      }
+    : null;
+
+  useEffect(() => {
+    if (hasUser) {
+      fetchUserDetails();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasUser, userId]);
 
   return (
     <div className="space-y-6">
@@ -82,30 +114,35 @@ const Profile = () => {
               <div>
                 <p className="text-xs uppercase text-slate-500">Full name</p>
                 <h2 className="text-2xl font-semibold text-slate-900">
-                  {profile.full_name || "Unknown customer"}
+                  {derived?.fullName}
                 </h2>
               </div>
               <div className="flex flex-wrap gap-4 text-sm text-slate-600">
                 <span>
                   DOB:{" "}
                   <strong className="text-slate-900">
-                    {formatDate(profile.date_of_birth)}
+                    {formatDate(derived?.dob)}
                   </strong>
                 </span>
                 <span>
                   Nationality:{" "}
                   <strong className="text-slate-900">
-                    {profile.nationality || "—"}
+                    {derived?.nationality || "-"}
                   </strong>
                 </span>
                 <span>
                   Gender:{" "}
                   <strong className="text-slate-900">
-                    {profile.gender || "—"}
+                    {derived?.gender || "-"}
                   </strong>
                 </span>
               </div>
             </div>
+            {derived?.address && (
+              <p className="text-sm text-slate-500 mt-3">
+                Address: <span className="text-slate-900">{derived.address}</span>
+              </p>
+            )}
           </section>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -117,13 +154,13 @@ const Profile = () => {
                 <p>
                   Email:{" "}
                   <span className="font-semibold text-slate-900">
-                    {profile.email || profile.email_address || "—"}
+                    {derived?.email}
                   </span>
                 </p>
                 <p>
                   Phone:{" "}
                   <span className="font-semibold text-slate-900">
-                    {profile.phone || profile.phone_number || "—"}
+                    {derived?.phone}
                   </span>
                 </p>
               </div>
@@ -136,13 +173,13 @@ const Profile = () => {
                 <p>
                   Emirates ID:{" "}
                   <span className="font-semibold text-slate-900">
-                    {profile.emirates_id || profile.national_id || "—"}
+                    {derived?.emiratesId}
                   </span>
                 </p>
                 <p>
                   Status:{" "}
                   <span className="font-semibold text-slate-900">
-                    {profile.status || "—"}
+                    {derived?.status || "-"}
                   </span>
                 </p>
               </div>

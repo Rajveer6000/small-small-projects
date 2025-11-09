@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useUserContext } from "../context/UserContext";
 import { API_BASE } from "../utils/leanConfig";
 
@@ -94,6 +94,13 @@ const Accounts = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (hasUser) {
+      loadAccounts();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasUser, userId]);
 
   const fetchBalance = async (accountId, options = {}) => {
     const { silent = false, force = false } = options;
