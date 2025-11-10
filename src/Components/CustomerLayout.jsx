@@ -4,12 +4,12 @@ import { useUserContext } from "../context/UserContext";
 
 const navItems = [
   { to: "/register", label: "User Regstoration" },
-  { to: "/profile", label: "Profile" },
   { to: "/accounts", label: "Get Accounts" },
   { to: "/transactions", label: "Transactions" },
   { to: "/income", label: "Get Income" },
   { to: "/expenses", label: "Get Expense" },
   { to: "/payments", label: "Payments" },
+  { to: "/profile", label: "Profile" }
 ];
 
 const CustomerLayout = () => {
