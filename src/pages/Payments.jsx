@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useUserContext } from "../context/UserContext";
 import { API_BASE, APP_TOKEN, SANDBOX } from "../utils/leanConfig";
 
@@ -71,7 +71,7 @@ const Payments = () => {
   const [intent, setIntent] = useState(null);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState("");
-  const [error, setError] = useState("");
+  const [error, setErrorState] = useState("");
   const [paymentIntents, setPaymentIntents] = useState([]);
   const [intentFilters, setIntentFilters] = useState({
     from: startOfMonth(),
@@ -88,15 +88,54 @@ const Payments = () => {
   const [paymentDetailsId, setPaymentDetailsId] = useState("");
   const [paymentDetails, setPaymentDetails] = useState(null);
   const [paymentDetailsLoading, setPaymentDetailsLoading] = useState(false);
+  const [toasts, setToasts] = useState([]);
+  const toastIdRef = useRef(0);
+  const toastTimeouts = useRef({});
 
-  const setInfo = (message) => {
-    setError("");
+  const dismissToast = (id) => {
+    setToasts((prev) => prev.filter((toast) => toast.id !== id));
+    if (toastTimeouts.current[id]) {
+      clearTimeout(toastTimeouts.current[id]);
+      delete toastTimeouts.current[id];
+    }
+  };
+
+  const pushToast = (variant, message) => {
+    if (!message) return;
+    const id = toastIdRef.current++;
+    setToasts((prev) => [...prev, { id, variant, message }]);
+    toastTimeouts.current[id] = setTimeout(() => {
+      dismissToast(id);
+    }, 4000);
+  };
+
+  useEffect(() => {
+    return () => {
+      Object.values(toastTimeouts.current).forEach((timeoutId) => {
+        clearTimeout(timeoutId);
+      });
+      toastTimeouts.current = {};
+    };
+  }, []);
+
+  const setError = (message = "", { toast = true } = {}) => {
+    setErrorState(message);
+    if (toast && message) {
+      pushToast("error", message);
+    }
+  };
+
+  const setInfo = (message, { toast = true } = {}) => {
+    setError("", { toast: false });
     setStatus(message);
+    if (toast && message) {
+      pushToast("success", message);
+    }
   };
 
   const loadDestinations = async () => {
     setLoading(true);
-    setInfo("Loading payment destinations...");
+    setInfo("Loading payment destinations...", { toast: false });
     try {
       const res = await fetch(`${API_BASE}/api/beneficiaries/getAll`);
       if (!res.ok) throw new Error("Unable to load destinations");
@@ -134,7 +173,7 @@ const Payments = () => {
       return;
     }
     setLoading(true);
-    setInfo("Checking payment sources...");
+    setInfo("Checking payment sources...", { toast: false });
     try {
       const res = await fetch(
         `${API_BASE}/api/lean/get-payment-sources?userId=${encodeURIComponent(userId)}`
@@ -180,8 +219,8 @@ const Payments = () => {
       return;
     }
     setLoading(true);
-    setError("");
-    setInfo("Deleting payment source...");
+    setError("", { toast: false });
+    setInfo("Deleting payment source...", { toast: false });
     try {
       const url = `${API_BASE}/api/lean/payment-sources/${encodeURIComponent(
         sourceId
@@ -203,7 +242,7 @@ const Payments = () => {
       return;
     }
     setLoading(true);
-    setInfo("Fetching Lean tokens for payments...");
+    setInfo("Fetching Lean tokens for payments...", { toast: false });
     try {
       const data = await refreshLeanTokens();
       if (!data) throw new Error("Unable to fetch Lean tokens");
@@ -238,7 +277,7 @@ const Payments = () => {
       return;
     }
     setLoading(true);
-    setInfo("Creating payment intent...");
+    setInfo("Creating payment intent...", { toast: false });
     try {
       const payload = {
         amount: parseFloat(amount),
@@ -477,18 +516,47 @@ const Payments = () => {
       : paymentIntents.length === intentFilters.size;
 
   return (
-    <div className="space-y-6">
-      {(status || error) && (
-        <div
-          className={`rounded-md border px-4 py-3 text-sm ${
-            error
-              ? "bg-rose-50 border-rose-200 text-rose-700"
-              : "bg-emerald-50 border-emerald-200 text-emerald-700"
-          }`}
-        >
-          {error || status}
+    <div className="space-y-6 relative pb-16">
+      <header className="bg-white border border-slate-200 rounded-xl shadow-sm p-6 space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-blue-600">
+              Payments
+            </p>
+            <h1 className="text-2xl font-semibold text-slate-900">
+              Lean Pay Console
+            </h1>
+            <p className="text-sm text-slate-500">
+              Monitor payment destinations, sources, and intents in one place.
+            </p>
+          </div>
+          <div className="text-sm text-slate-500 text-right">
+            {hasUser ? (
+              <>
+                Active user&nbsp;
+                <span className="font-semibold text-slate-900">
+                  #{userId}
+                </span>
+              </>
+            ) : (
+              "Connect a user to enable payments"
+            )}
+          </div>
         </div>
-      )}
+        {(status || error) && (
+          <div className="flex justify-center">
+            <div
+              className={`max-w-2xl w-full rounded-md border px-4 py-3 text-sm text-center ${
+                error
+                  ? "bg-rose-50 border-rose-200 text-rose-700"
+                  : "bg-emerald-50 border-emerald-200 text-emerald-700"
+              }`}
+            >
+              {error || status}
+            </div>
+          </div>
+        )}
+      </header>
       <section className="bg-white border border-slate-200 rounded-xl shadow-sm p-6 space-y-4">
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div>
@@ -1155,6 +1223,31 @@ const Payments = () => {
           )}
         </div>
       </section>
+      <div className="pointer-events-none fixed bottom-6 right-6 z-50 flex flex-col gap-3">
+        {toasts.map((toast) => (
+          <div
+            key={toast.id}
+            className={`pointer-events-auto w-72 rounded-lg border px-4 py-3 text-sm shadow-lg ${
+              toast.variant === "error"
+                ? "bg-rose-50 border-rose-200 text-rose-700"
+                : toast.variant === "success"
+                ? "bg-emerald-50 border-emerald-200 text-emerald-800"
+                : "bg-blue-50 border-blue-200 text-blue-700"
+            }`}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <span>{toast.message}</span>
+              <button
+                type="button"
+                onClick={() => dismissToast(toast.id)}
+                className="text-xs font-semibold uppercase tracking-wide text-slate-500 hover:text-slate-900"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
