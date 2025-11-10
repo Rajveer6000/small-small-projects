@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useUserContext } from "../context/UserContext";
+import { useUIContext } from "../context/UIContext";
 import { API_BASE, APP_TOKEN, SANDBOX } from "../utils/leanConfig";
 
 const PAYMENT_INTENT_STATUSES = [
@@ -70,8 +71,6 @@ const Payments = () => {
   const [description, setDescription] = useState("Customer payment");
   const [intent, setIntent] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [status, setStatus] = useState("");
-  const [error, setErrorState] = useState("");
   const [paymentIntents, setPaymentIntents] = useState([]);
   const [intentFilters, setIntentFilters] = useState({
     from: startOfMonth(),
@@ -88,49 +87,15 @@ const Payments = () => {
   const [paymentDetailsId, setPaymentDetailsId] = useState("");
   const [paymentDetails, setPaymentDetails] = useState(null);
   const [paymentDetailsLoading, setPaymentDetailsLoading] = useState(false);
-  const [toasts, setToasts] = useState([]);
-  const toastIdRef = useRef(0);
-  const toastTimeouts = useRef({});
+  const { setStatus: publishStatus, setError: publishError } = useUIContext();
 
-  const dismissToast = (id) => {
-    setToasts((prev) => prev.filter((toast) => toast.id !== id));
-    if (toastTimeouts.current[id]) {
-      clearTimeout(toastTimeouts.current[id]);
-      delete toastTimeouts.current[id];
-    }
-  };
+  const setError = (message = "", options = {}) =>
+    publishError(message, options);
 
-  const pushToast = (variant, message) => {
-    if (!message) return;
-    const id = toastIdRef.current++;
-    setToasts((prev) => [...prev, { id, variant, message }]);
-    toastTimeouts.current[id] = setTimeout(() => {
-      dismissToast(id);
-    }, 4000);
-  };
-
-  useEffect(() => {
-    return () => {
-      Object.values(toastTimeouts.current).forEach((timeoutId) => {
-        clearTimeout(timeoutId);
-      });
-      toastTimeouts.current = {};
-    };
-  }, []);
-
-  const setError = (message = "", { toast = true } = {}) => {
-    setErrorState(message);
-    if (toast && message) {
-      pushToast("error", message);
-    }
-  };
-
-  const setInfo = (message, { toast = true } = {}) => {
-    setError("", { toast: false });
-    setStatus(message);
-    if (toast && message) {
-      pushToast("success", message);
-    }
+  const setInfo = (message, options = {}) => {
+    const { tone = "success", toast = true, ...rest } = options;
+    publishError("", { toast: false });
+    publishStatus(message, { tone, toast, ...rest });
   };
 
   const loadDestinations = async () => {
@@ -516,7 +481,7 @@ const Payments = () => {
       : paymentIntents.length === intentFilters.size;
 
   return (
-    <div className="space-y-6 relative pb-16">
+    <div className="space-y-6">
       <header className="bg-white border border-slate-200 rounded-xl shadow-sm p-6 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
@@ -543,19 +508,6 @@ const Payments = () => {
             )}
           </div>
         </div>
-        {(status || error) && (
-          <div className="flex justify-center">
-            <div
-              className={`max-w-2xl w-full rounded-md border px-4 py-3 text-sm text-center ${
-                error
-                  ? "bg-rose-50 border-rose-200 text-rose-700"
-                  : "bg-emerald-50 border-emerald-200 text-emerald-700"
-              }`}
-            >
-              {error || status}
-            </div>
-          </div>
-        )}
       </header>
       <section className="bg-white border border-slate-200 rounded-xl shadow-sm p-6 space-y-4">
         <div className="flex items-center justify-between flex-wrap gap-3">
@@ -1223,31 +1175,6 @@ const Payments = () => {
           )}
         </div>
       </section>
-      <div className="pointer-events-none fixed bottom-6 right-6 z-50 flex flex-col gap-3">
-        {toasts.map((toast) => (
-          <div
-            key={toast.id}
-            className={`pointer-events-auto w-72 rounded-lg border px-4 py-3 text-sm shadow-lg ${
-              toast.variant === "error"
-                ? "bg-rose-50 border-rose-200 text-rose-700"
-                : toast.variant === "success"
-                ? "bg-emerald-50 border-emerald-200 text-emerald-800"
-                : "bg-blue-50 border-blue-200 text-blue-700"
-            }`}
-          >
-            <div className="flex items-start justify-between gap-3">
-              <span>{toast.message}</span>
-              <button
-                type="button"
-                onClick={() => dismissToast(toast.id)}
-                className="text-xs font-semibold uppercase tracking-wide text-slate-500 hover:text-slate-900"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
     </div>
   );
 };

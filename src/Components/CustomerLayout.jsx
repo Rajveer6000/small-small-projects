@@ -1,9 +1,10 @@
 import { NavLink, Outlet } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useUserContext } from "../context/UserContext";
+import { useUIContext } from "../context/UIContext";
 
 const navItems = [
-  { to: "/register", label: "User Regstoration" },
+  { to: "/register", label: "User Registration" },
   { to: "/accounts", label: "Get Accounts" },
   { to: "/transactions", label: "Transactions" },
   { to: "/income", label: "Get Income" },
@@ -15,6 +16,8 @@ const navItems = [
 const CustomerLayout = () => {
   const { userId, setUserId } = useUserContext();
   const [draftUserId, setDraftUserId] = useState(userId);
+  const { statusMessage, statusTone, errorMessage, clearStatus } =
+    useUIContext();
 
   useEffect(() => {
     setDraftUserId(userId);
@@ -23,6 +26,17 @@ const CustomerLayout = () => {
   const handleApplyUser = () => {
     setUserId(draftUserId?.trim() ?? "");
   };
+
+  const bannerMessage = errorMessage || statusMessage;
+  const bannerTone = errorMessage ? "error" : statusTone;
+  const bannerToneClasses = {
+    error: "bg-rose-50 border-rose-200 text-rose-700",
+    info: "bg-blue-50 border-blue-200 text-blue-700",
+    success: "bg-emerald-50 border-emerald-200 text-emerald-700",
+    warning: "bg-amber-50 border-amber-200 text-amber-700",
+  };
+  const bannerClasses =
+    bannerToneClasses[bannerTone] ?? bannerToneClasses.success;
 
   return (
     <div className="h-screen flex bg-slate-50 text-gray-900 overflow-hidden">
@@ -84,6 +98,22 @@ const CustomerLayout = () => {
           </div>
         </header>
         <div className="flex-1 p-6 overflow-y-auto min-h-0">
+          {bannerMessage && (
+            <div className="mb-6">
+              <div
+                className={`flex items-start justify-between gap-4 rounded-md border px-4 py-3 text-sm ${bannerClasses}`}
+              >
+                <span>{bannerMessage}</span>
+                <button
+                  type="button"
+                  onClick={clearStatus}
+                  className="text-xs font-semibold uppercase tracking-wide text-slate-500 hover:text-slate-900"
+                >
+                  Dismiss
+                </button>
+              </div>
+            </div>
+          )}
           <Outlet />
         </div>
       </main>

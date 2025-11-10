@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useUserContext } from "../context/UserContext";
+import { useUIContext } from "../context/UIContext";
 import { API_BASE, APP_TOKEN, PERMISSIONS, SANDBOX } from "../utils/leanConfig";
 
 const initialForm = {
@@ -14,13 +15,16 @@ const initialForm = {
 
 const UserRegistration = () => {
   const { userId, setUserId } = useUserContext();
+  const { setStatus: publishStatus, setError: publishError, clearStatus } =
+    useUIContext();
   const [form, setForm] = useState(initialForm);
-  const [status, setStatus] = useState({ tone: "info", message: "" });
   const [registeredUser, setRegisteredUser] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const setInfo = (message) => setStatus({ tone: "info", message });
-  const setError = (message) => setStatus({ tone: "error", message });
+  const setInfo = (message, options = {}) =>
+    publishStatus(message, { tone: "info", toast: true, ...options });
+  const setError = (message, options = {}) =>
+    publishError(message, { toast: true, ...options });
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -31,7 +35,7 @@ const UserRegistration = () => {
     e.preventDefault();
     if (loading) return;
     setLoading(true);
-    setStatus({ tone: "info", message: "Registering new user..." });
+    publishStatus("Registering new user...", { tone: "info", toast: false });
     try {
       const res = await fetch(`${API_BASE}/api/users/register`, {
         method: "POST",
@@ -87,23 +91,11 @@ const UserRegistration = () => {
 
   return (
     <div className="space-y-6">
-      {status.message && (
-        <div
-          className={`rounded-md border px-4 py-3 text-sm ${
-            status.tone === "error"
-              ? "bg-rose-50 border-rose-200 text-rose-700"
-              : "bg-blue-50 border-blue-200 text-blue-700"
-          }`}
-        >
-          {status.message}
-        </div>
-      )}
-
       <section className="bg-white border border-slate-200 rounded-xl shadow-sm p-6">
         <div className="flex items-center justify-between mb-6">
           <div>
             <h3 className="text-lg font-semibold text-slate-900">
-              User Regstoration
+              User Registration
             </h3>
             <p className="text-sm text-slate-500">
               Capture customer details required before connecting with Lean.
@@ -113,7 +105,7 @@ const UserRegistration = () => {
             onClick={() => {
               setForm(initialForm);
               setRegisteredUser(null);
-              setStatus({ tone: "info", message: "" });
+              clearStatus();
             }}
             className="text-xs text-slate-500 hover:text-slate-700"
           >

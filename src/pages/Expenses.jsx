@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useUserContext } from "../context/UserContext";
+import { useUIContext } from "../context/UIContext";
 import { API_BASE } from "../utils/leanConfig";
 
 const defaultStart = () => {
@@ -18,11 +19,10 @@ const formatCurrency = (amount, currency = "AED") => {
 
 const Expenses = () => {
   const { userId, hasUser } = useUserContext();
+  const { setStatus, setError } = useUIContext();
   const [startDate, setStartDate] = useState(defaultStart());
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [status, setStatus] = useState("");
-  const [error, setError] = useState("");
   const [rawOpen, setRawOpen] = useState(false);
 
   const categories = useMemo(() => {
@@ -60,17 +60,6 @@ const Expenses = () => {
 
   return (
     <div className="space-y-6">
-      {(status || error) && (
-        <div
-          className={`rounded-md border px-4 py-3 text-sm ${
-            error
-              ? "bg-rose-50 border-rose-200 text-rose-700"
-              : "bg-blue-50 border-blue-200 text-blue-700"
-          }`}
-        >
-          {error || status}
-        </div>
-      )}
       <section className="bg-white border border-slate-200 rounded-xl shadow-sm p-6 space-y-4">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div>

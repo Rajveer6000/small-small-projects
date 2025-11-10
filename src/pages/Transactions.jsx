@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useUserContext } from "../context/UserContext";
+import { useUIContext } from "../context/UIContext";
 import { API_BASE } from "../utils/leanConfig";
 
 const formatAmount = (amount, currency = "AED") =>
@@ -47,12 +48,11 @@ const normalizeCategory = (tx) =>
 
 const Transactions = () => {
   const { userId, hasUser } = useUserContext();
+  const { setStatus, setError } = useUIContext();
   const [accounts, setAccounts] = useState([]);
   const [selectedAccountId, setSelectedAccountId] = useState("");
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [status, setStatus] = useState("");
-  const [error, setError] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("ALL");
   const [categoryOptions, setCategoryOptions] = useState(["ALL"]);
   const [range, setRange] = useState({
@@ -163,17 +163,6 @@ const Transactions = () => {
 
   return (
     <div className="space-y-6">
-      {(status || error) && (
-        <div
-          className={`rounded-md border px-4 py-3 text-sm ${
-            error
-              ? "bg-rose-50 border-rose-200 text-rose-700"
-              : "bg-blue-50 border-blue-200 text-blue-700"
-          }`}
-        >
-          {error || status}
-        </div>
-      )}
       <section className="bg-white border border-slate-200 rounded-xl shadow-sm p-6 space-y-4">
         <div>
           <h3 className="text-lg font-semibold text-slate-900">Transactions</h3>

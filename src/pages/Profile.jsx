@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useUserContext } from "../context/UserContext";
+import { useUIContext } from "../context/UIContext";
 import { API_BASE } from "../utils/leanConfig";
 
 const formatDate = (value) =>
@@ -7,10 +8,9 @@ const formatDate = (value) =>
 
 const Profile = () => {
   const { userId, hasUser } = useUserContext();
+  const { setStatus, setError } = useUIContext();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [info, setInfo] = useState("");
 
   const fetchUserDetails = async () => {
     if (!hasUser) {
@@ -19,7 +19,7 @@ const Profile = () => {
     }
     setLoading(true);
     setError("");
-    setInfo("Loading profile...");
+    setStatus("Loading profile...");
     try {
       const res = await fetch(
         `${API_BASE}/api/lean/UserDetails?userId=${encodeURIComponent(userId)}`
@@ -27,7 +27,7 @@ const Profile = () => {
       if (!res.ok) throw new Error("User details fetch failed");
       const data = await res.json();
       setProfile(data.payload);
-      setInfo("Profile loaded successfully.");
+      setStatus("Profile loaded successfully.");
     } catch (err) {
       setError(err.message || "Unable to load profile");
     } finally {
@@ -73,17 +73,6 @@ const Profile = () => {
 
   return (
     <div className="space-y-6">
-      {(info || error) && (
-        <div
-          className={`rounded-md border px-4 py-3 text-sm ${
-            error
-              ? "bg-rose-50 border-rose-200 text-rose-700"
-              : "bg-emerald-50 border-emerald-200 text-emerald-700"
-          }`}
-        >
-          {error || info}
-        </div>
-      )}
       <section className="bg-white border border-slate-200 rounded-xl shadow-sm p-6 space-y-4">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>

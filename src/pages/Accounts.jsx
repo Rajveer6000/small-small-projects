@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useUserContext } from "../context/UserContext";
+import { useUIContext } from "../context/UIContext";
 import { API_BASE } from "../utils/leanConfig";
 
 const formatCurrency = (amount, currency = "AED") => {
@@ -28,12 +29,11 @@ const formatAccountLabel = (account) => {
 
 const Accounts = () => {
   const { userId, hasUser } = useUserContext();
+  const { setStatus, setError } = useUIContext();
   const [accounts, setAccounts] = useState([]);
   const [balance, setBalance] = useState(null);
   const [balancesCache, setBalancesCache] = useState({});
   const [selectedAccountId, setSelectedAccountId] = useState(null);
-  const [status, setStatus] = useState("");
-  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const summaryCards = useMemo(() => {
@@ -146,17 +146,6 @@ const Accounts = () => {
 
   return (
     <div className="space-y-6">
-      {(status || error) && (
-        <div
-          className={`rounded-md border px-4 py-3 text-sm ${
-            error
-              ? "bg-rose-50 border-rose-200 text-rose-700"
-              : "bg-emerald-50 border-emerald-200 text-emerald-700"
-          }`}
-        >
-          {error || status}
-        </div>
-      )}
 
       <section className="bg-white border border-slate-200 rounded-xl shadow-sm p-6">
         <div className="flex items-center justify-between">
