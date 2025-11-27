@@ -151,11 +151,11 @@ const Income = () => {
     );
   };
 
-  const renderIncomeFactors = (factors) => {
+  const renderIncomeFactors = (factors,title) => {
     if (!factors?.periods?.length) return null;
     return (
       <section className="bg-white border border-slate-200 rounded-xl shadow-sm p-4 space-y-3">
-        <h4 className="text-sm font-semibold text-slate-900">Income factors</h4>
+        <h4 className="text-sm font-semibold text-slate-900">{title}</h4>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-slate-600">
           {factors.periods.map((period) => (
             <div
@@ -265,7 +265,8 @@ const Income = () => {
             "Non-salary transactions",
             nonSalary?.currency || "AED"
           )}
-          {renderIncomeFactors(salary?.income_factors)}
+          {renderIncomeFactors(salary?.income_factors,"Salary Income Factors")}
+          {renderIncomeFactors(nonSalary?.income_factors,"Non-salary Income Factors")}
         </>
       )}
 
