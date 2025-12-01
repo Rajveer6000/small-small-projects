@@ -564,7 +564,7 @@ const CreditScore = () => {
 
       {overlayVisible && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 backdrop-blur">
-          <div className="w-full max-w-2xl rounded-3xl border border-slate-200 bg-white shadow-[0_20px_80px_rgba(0,0,0,0.25)] overflow-hidden">
+          <div className="w-full max-w-4xl rounded-3xl border border-slate-200 bg-white shadow-[0_30px_120px_rgba(0,0,0,0.25)] overflow-hidden">
             <div className="px-6 py-4 border-b border-slate-100 bg-gradient-to-r from-slate-50 via-white to-slate-50">
               <div className="text-[11px] uppercase text-slate-500 tracking-wide">
                 Scoring in progress
@@ -588,23 +588,23 @@ const CreditScore = () => {
                   </div>
                 </div>
               </div>
-              <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {funGifs.map((gif, idx) => (
                   <div
                     key={gif + idx}
-                    className="rounded-2xl border border-slate-200 bg-slate-50 p-3 flex gap-3 items-center"
+                    className="rounded-2xl border border-slate-200 bg-slate-50 p-3 flex gap-3"
                   >
                     <img
                       src={gif}
                       alt="Waiting for the API"
-                      className="h-20 w-24 rounded-lg object-cover shadow"
+                      className="h-24 w-28 rounded-xl object-cover shadow"
                     />
-                    <div className="space-y-1 text-xs text-slate-600">
-                      <div className="font-semibold text-slate-800">
+                    <div className="space-y-1 text-xs text-slate-600 flex-1">
+                      <div className="font-semibold text-slate-800 text-sm">
                         Chief Cat Officer is on it...
                       </div>
-                      <div>{loadingMessage}</div>
-                      <div className="text-[11px] text-slate-500">
+                      <div className="text-sm">{loadingMessage}</div>
+                      <div className="text-[11px] text-slate-500 leading-relaxed">
                         Bribing servers with laser pointers.
                       </div>
                     </div>
