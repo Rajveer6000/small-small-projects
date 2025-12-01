@@ -10,6 +10,7 @@ const navItems = [
   { to: "/income", label: "Get Income" },
   { to: "/expenses", label: "Get Expense" },
   { to: "/payments", label: "Payments" },
+  { to: "/credit-score", label: "Credit Score" },
   { to: "/profile", label: "Profile" }
 ];
 

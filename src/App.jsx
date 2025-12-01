@@ -10,6 +10,7 @@ import Expenses from "./pages/Expenses";
 import Payments from "./pages/Payments";
 import Profile from "./pages/Profile";
 import SetupPage from "./Components/SetupPage";
+import CreditScore from "./pages/CreditScore";
 
 const App = () => (
   <UserProvider>
@@ -25,6 +26,7 @@ const App = () => (
             <Route path="income" element={<Income />} />
             <Route path="expenses" element={<Expenses />} />
             <Route path="payments" element={<Payments />} />
+            <Route path="credit-score" element={<CreditScore />} />
             <Route path="a" element={<SetupPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/register" replace />} />
