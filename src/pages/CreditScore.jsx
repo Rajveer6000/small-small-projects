@@ -103,6 +103,24 @@ const CreditScore = () => {
     }, 3500);
 
     try {
+      const parseApiError = async (res) => {
+        let parsedBody;
+        try {
+          parsedBody = await res.clone().json();
+        } catch (_) {
+          parsedBody = null;
+        }
+        const apiMessage =
+          parsedBody?.message || parsedBody?.error || parsedBody?.details;
+        if (apiMessage) return apiMessage;
+        try {
+          const text = await res.text();
+          return text?.trim() || null;
+        } catch (_) {
+          return null;
+        }
+      };
+
       const payload = {
         userId: toNumber(form.userId),
         historyMonths: toNumber(form.historyMonths),
@@ -120,10 +138,19 @@ const CreditScore = () => {
       });
 
       if (!res.ok) {
-        throw new Error("Failed to calculate credit score");
+        const apiMessage = await parseApiError(res);
+        const statusLabel = res.status
+          ? `${res.status}${res.statusText ? ` ${res.statusText}` : ""}`
+          : res.statusText || "";
+        const statusInfo = statusLabel ? ` (${statusLabel})` : "";
+        throw new Error(
+          apiMessage
+            ? apiMessage
+            : `Failed to calculate credit score${statusInfo}`
+        );
       }
 
-      const data = await res.json();
+      const data = (await res.clone().json().catch(() => null)) ?? (await res.json());
       setResult(data);
       setShowGif(false);
       setStatus("Credit score calculated.", { tone: "success", toast: true });
@@ -141,6 +168,24 @@ const CreditScore = () => {
   };
 
   const calculation = result?.calculation || result;
+  const riskTierInfo =
+    typeof calculation?.riskTier === "object" && calculation?.riskTier
+      ? calculation.riskTier
+      : null;
+  const riskTierLabel =
+    typeof calculation?.riskTier === "string"
+      ? calculation.riskTier
+      : riskTierInfo?.riskTier ?? "-";
+  const riskTierRange =
+    riskTierInfo?.minScore !== undefined && riskTierInfo?.maxScore !== undefined
+      ? `${formatScore(riskTierInfo.minScore)} - ${formatScore(
+          riskTierInfo.maxScore
+        )}`
+      : "-";
+  const riskTierRentLimit =
+    riskTierInfo?.rentLimitPercentage !== undefined
+      ? `${formatScore(riskTierInfo.rentLimitPercentage)}%`
+      : "-";
 
   const mainCategoryCards = useMemo(() => {
     if (!calculation?.mainCategoryScores) return [];
@@ -221,7 +266,7 @@ const CreditScore = () => {
                 </div>
                 <div className="mb-1 text-sm text-blue-100">/ 10</div>
                 <div className="ml-auto rounded-full bg-white/15 px-3 py-1 text-xs font-semibold">
-                  Tier {calculation?.riskTier ?? "-"}
+                  Tier {riskTierLabel}
                 </div>
               </div>
               <div className="mt-3 h-2 rounded-full bg-white/20 overflow-hidden">
@@ -371,7 +416,16 @@ const CreditScore = () => {
               <div className="rounded-lg bg-slate-50 border border-slate-100 p-3">
                 <div className="text-xs uppercase text-slate-600">Risk tier</div>
                 <div className="text-2xl font-bold text-slate-900">
-                  {calculation.riskTier ?? "-"}
+                  {riskTierLabel}
+                </div>
+                <div className="text-xs text-slate-600">
+                  Level: {riskTierInfo?.riskLevel ?? "-"}
+                </div>
+                <div className="text-xs text-slate-600">
+                  Range: {riskTierRange}
+                </div>
+                <div className="text-xs text-slate-600">
+                  Rent limit: {riskTierRentLimit}
                 </div>
                 <div className="text-xs text-slate-600">
                   Calculation ID {calculation.calculationId ?? "-"}
